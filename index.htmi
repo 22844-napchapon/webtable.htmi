@@ -1,9 +1,10 @@
+HTML
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบเก็บข้อมูลในรูปแบบตาราง</title>
+    <title>Data Table System</title>
     <style>
         * {
             box-sizing: border-box;
@@ -29,7 +30,6 @@
             margin-top: 0;
             text-align: center;
         }
-        /* ส่วนของฟอร์มกรอกข้อมูล */
         .form-group {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -46,7 +46,7 @@
             color: #666;
             font-weight: bold;
         }
-        .input-box input, .input-box select {
+        .input-box input {
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 6px;
@@ -67,7 +67,6 @@
         .btn-submit:hover {
             background-color: #1d4ed8;
         }
-        /* ส่วนของตารางข้อมูล */
         .table-container {
             overflow-x: auto;
             margin-top: 20px;
@@ -116,15 +115,15 @@
         <div class="form-group">
             <div class="input-box">
                 <label for="studentId">รหัสประจำตัว</label>
-                <input type="text" id="studentId" placeholder="เช่น S001" required>
+                <input type="text" id="studentId" required>
             </div>
             <div class="input-box">
                 <label for="fullName">ชื่อ-นามสกุล</label>
-                <input type="text" id="fullName" placeholder="ชื่อ นามสกุล" required>
+                <input type="text" id="fullName" required>
             </div>
             <div class="input-box">
                 <label for="score">คะแนน</label>
-                <input type="number" id="score" placeholder="0 - 100" min="0" max="100" required>
+                <input type="number" id="score" min="0" max="100" required>
             </div>
             <button type="submit" class="btn-submit">➕ เพิ่มข้อมูลลงตาราง</button>
         </div>
@@ -142,23 +141,19 @@
                     <th>จัดการ</th>
                 </tr>
             </thead>
-            <tbody id="tableBody">
-                </tbody>
+            <tbody id="tableBody"></tbody>
         </table>
         <div id="noDataMessage" class="no-data">ยังไม่มีข้อมูลในตาราง กรุณากรอกข้อมูลด้านบน</div>
     </div>
 </div>
 
 <script>
-    // 1. โหลดข้อมูลเก่าจาก LocalStorage (ถ้ามี) ตั้งแต่เริ่มเปิดเว็บ
     let dataList = JSON.parse(localStorage.getItem('myTableData')) || [];
 
-    // ฟังก์ชันสำหรับวาดตารางใหม่ทุกครั้งที่มีการเปลี่ยนแปลง
     function renderTable() {
         const tableBody = document.getElementById('tableBody');
         const noDataMessage = document.getElementById('noDataMessage');
         
-        // ล้างข้อมูลเก่าในตารางก่อน
         tableBody.innerHTML = '';
 
         if (dataList.length === 0) {
@@ -168,7 +163,6 @@
             noDataMessage.style.display = 'none';
         }
 
-        // วนลูปนำข้อมูลใน Array มาสร้างเป็นแถว (Row) ของตาราง
         dataList.forEach((item, index) => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -181,36 +175,28 @@
         });
     }
 
-    // 2. ฟังก์ชันเพิ่มข้อมูลเมื่อกด Submit ฟอร์ม
     function addData(event) {
-        event.preventDefault(); // ป้องกันไม่ให้หน้าเว็บรีเฟรชเอง
+        event.preventDefault();
 
-        // ดึงค่าจากฟอร์ม
         const id = document.getElementById('studentId').value;
         const name = document.getElementById('fullName').value;
         const score = document.getElementById('score').value;
 
-        // เพิ่มข้อมูลในรูปแบบ Object ลงใน Array
         dataList.push({ id, name, score });
-
-        // บันทึกลง LocalStorage
         localStorage.setItem('myTableData', JSON.stringify(dataList));
 
-        // วาดตารางใหม่ และรีเซ็ตฟอร์ม
         renderTable();
         document.getElementById('dataForm').reset();
     }
 
-    // 3. ฟังก์ชันลบข้อมูลรายแถว
     function deleteData(index) {
         if(confirm('คุณแน่ใจใช่ไหมว่าจะลบข้อมูลแถวนี้?')) {
-            dataList.splice(index, 1); // ลบข้อมูลออกจาก Array ตามตำแหน่ง index
-            localStorage.setItem('myTableData', JSON.stringify(dataList)); // อัปเดตตารางใน Storage
-            renderTable(); // วาดตารางใหม่
+            dataList.splice(index, 1);
+            localStorage.setItem('myTableData', JSON.stringify(dataList));
+            renderTable();
         }
     }
 
-    // เรียกใช้งานครั้งแรกเมื่อเปิดหน้าเว็บ
     renderTable();
 </script>
 
