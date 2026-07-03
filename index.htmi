@@ -1,21 +1,218 @@
-<table border="1" style="border-collapse: collapse; width: 100%; text-align: left;">
-  <thead>
-    <tr style="background-color: #f2f2f2;">
-      <th>รหัสนักเรียน</th>
-      <th>ชื่อ-นามสกุล</th>
-      <th>คะแนนสอบ</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>S001</td>
-      <td>สมชาย ใจดี</td>
-      <td>85</td>
-    </tr>
-    <tr>
-      <td>S002</td>
-      <td>สมศรี มีสุข</td>
-      <td>92</td>
-    </tr>
-  </tbody>
-</table>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบเก็บข้อมูลในรูปแบบตาราง</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+            text-align: center;
+        }
+        /* ส่วนของฟอร์มกรอกข้อมูล */
+        .form-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .input-box {
+            display: flex;
+            flex-direction: column;
+        }
+        .input-box label {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+            font-weight: bold;
+        }
+        .input-box input, .input-box select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .btn-submit {
+            grid-column: 1 / -1;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover {
+            background-color: #1d4ed8;
+        }
+        /* ส่วนของตารางข้อมูล */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+        .btn-delete {
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-delete:hover {
+            background-color: #b91c1c;
+        }
+        .no-data {
+            text-align: center;
+            color: #94a3b8;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📊 ระบบบันทึกและแสดงข้อมูลตาราง</h2>
+    
+    <form id="dataForm" onsubmit="addData(event)">
+        <div class="form-group">
+            <div class="input-box">
+                <label for="studentId">รหัสประจำตัว</label>
+                <input type="text" id="studentId" placeholder="เช่น S001" required>
+            </div>
+            <div class="input-box">
+                <label for="fullName">ชื่อ-นามสกุล</label>
+                <input type="text" id="fullName" placeholder="ชื่อ นามสกุล" required>
+            </div>
+            <div class="input-box">
+                <label for="score">คะแนน</label>
+                <input type="number" id="score" placeholder="0 - 100" min="0" max="100" required>
+            </div>
+            <button type="submit" class="btn-submit">➕ เพิ่มข้อมูลลงตาราง</button>
+        </div>
+    </form>
+
+    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>รหัสประจำตัว</th>
+                    <th>ชื่อ-นามสกุล</th>
+                    <th>คะแนน</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+        <div id="noDataMessage" class="no-data">ยังไม่มีข้อมูลในตาราง กรุณากรอกข้อมูลด้านบน</div>
+    </div>
+</div>
+
+<script>
+    // 1. โหลดข้อมูลเก่าจาก LocalStorage (ถ้ามี) ตั้งแต่เริ่มเปิดเว็บ
+    let dataList = JSON.parse(localStorage.getItem('myTableData')) || [];
+
+    // ฟังก์ชันสำหรับวาดตารางใหม่ทุกครั้งที่มีการเปลี่ยนแปลง
+    function renderTable() {
+        const tableBody = document.getElementById('tableBody');
+        const noDataMessage = document.getElementById('noDataMessage');
+        
+        // ล้างข้อมูลเก่าในตารางก่อน
+        tableBody.innerHTML = '';
+
+        if (dataList.length === 0) {
+            noDataMessage.style.display = 'block';
+            return;
+        } else {
+            noDataMessage.style.display = 'none';
+        }
+
+        // วนลูปนำข้อมูลใน Array มาสร้างเป็นแถว (Row) ของตาราง
+        dataList.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.id}</td>
+                <td>${item.name}</td>
+                <td>${item.score}</td>
+                <td><button class="btn-delete" onclick="deleteData(${index})">ลบ</button></td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // 2. ฟังก์ชันเพิ่มข้อมูลเมื่อกด Submit ฟอร์ม
+    function addData(event) {
+        event.preventDefault(); // ป้องกันไม่ให้หน้าเว็บรีเฟรชเอง
+
+        // ดึงค่าจากฟอร์ม
+        const id = document.getElementById('studentId').value;
+        const name = document.getElementById('fullName').value;
+        const score = document.getElementById('score').value;
+
+        // เพิ่มข้อมูลในรูปแบบ Object ลงใน Array
+        dataList.push({ id, name, score });
+
+        // บันทึกลง LocalStorage
+        localStorage.setItem('myTableData', JSON.stringify(dataList));
+
+        // วาดตารางใหม่ และรีเซ็ตฟอร์ม
+        renderTable();
+        document.getElementById('dataForm').reset();
+    }
+
+    // 3. ฟังก์ชันลบข้อมูลรายแถว
+    function deleteData(index) {
+        if(confirm('คุณแน่ใจใช่ไหมว่าจะลบข้อมูลแถวนี้?')) {
+            dataList.splice(index, 1); // ลบข้อมูลออกจาก Array ตามตำแหน่ง index
+            localStorage.setItem('myTableData', JSON.stringify(dataList)); // อัปเดตตารางใน Storage
+            renderTable(); // วาดตารางใหม่
+        }
+    }
+
+    // เรียกใช้งานครั้งแรกเมื่อเปิดหน้าเว็บ
+    renderTable();
+</script>
+
+</body>
+</html>
